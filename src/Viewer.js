@@ -27,6 +27,7 @@ import {
   isAbortError,
   isExtendedPosition,
   isFullscreenEnabled,
+  isNil,
   logWarn,
   MultiDynamic,
   pluginInterop,
@@ -96,6 +97,7 @@ export class Viewer extends EventEmitter {
       animationPromise : null,
       loadingPromise   : null,
       startTimeout     : null,
+      idleTime         : performance.now(),
       objectsObservers : {},
       size             : {
         width : 0,
@@ -275,7 +277,7 @@ export class Viewer extends EventEmitter {
       }
 
       // Queue autorotate
-      if (this.config.autorotateDelay) {
+      if (!isNil(this.config.autorotateDelay)) {
         this.prop.startTimeout = setTimeout(() => this.startAutorotate(), this.config.autorotateDelay);
       }
 
@@ -505,6 +507,7 @@ export class Viewer extends EventEmitter {
         throw err;
       }
       else {
+        this.resetIdleTime();
         this.navbar.setCaption(this.config.caption);
         return true;
       }
@@ -646,12 +649,23 @@ export class Viewer extends EventEmitter {
     this.setOptions({ [option]: value });
   }
 
+  resetIdleTime() {
+    this.prop.idleTime = performance.now();
+  }
+
+  disableIdleTime() {
+    this.prop.idleTime = -1;
+  }
+
   /**
    * @summary Starts the automatic rotation
    * @fires PSV.autorotate
    */
   startAutorotate(refresh = false) {
     if (refresh && !this.isAutorotateEnabled()) {
+      return;
+    }
+    if (!refresh && this.isAutorotateEnabled()) {
       return;
     }
 
@@ -808,6 +822,11 @@ export class Viewer extends EventEmitter {
       },
     });
 
+    this.prop.animationPromise.then(() => {
+      this.prop.animationPromise = null;
+      this.resetIdleTime();
+    });
+
     return this.prop.animationPromise;
   }
 
@@ -950,6 +969,7 @@ export class Viewer extends EventEmitter {
    * @package
    */
   __stopAll() {
+    this.disableIdleTime();
     this.stopAutorotate();
     this.stopAnimation();
 

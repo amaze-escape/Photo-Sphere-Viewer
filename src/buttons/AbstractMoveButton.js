@@ -120,7 +120,10 @@ export class AbstractMoveButton extends AbstractButton {
       return;
     }
 
-    this.prop.handler.up(() => this.psv.dynamics.position.stop());
+    this.prop.handler.up(() => {
+      this.psv.dynamics.position.stop();
+      this.psv.resetIdleTime();
+    });
   }
 
 }

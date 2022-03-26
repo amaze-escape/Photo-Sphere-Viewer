@@ -207,6 +207,10 @@ export class Renderer extends AbstractService {
     this.psv.trigger(EVENTS.BEFORE_RENDER, timestamp, elapsed);
     each(this.psv.dynamics, d => d.update(elapsed));
 
+    if (this.config.autorotateIdle && this.prop.idleTime > 0 && timestamp - this.prop.idleTime > this.config.autorotateIdle) {
+      this.psv.startAutorotate();
+    }
+
     if (this.prop.needsUpdate) {
       this.render();
       this.prop.needsUpdate = false;

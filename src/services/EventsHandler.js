@@ -155,6 +155,8 @@ export class EventsHandler extends AbstractService {
     /* eslint-enable */
 
     if (!getClosest(evt.target, '.psv-navbar') && !getClosest(evt.target, '.psv-panel')) {
+      this.psv.resetIdleTime();
+
       /* eslint-disable */
       switch (evt.type) {
         // @formatter:off
@@ -211,12 +213,17 @@ export class EventsHandler extends AbstractService {
       return;
     }
 
-    if (this.config.keyboard[e.key] === ACTIONS.TOGGLE_AUTOROTATE) {
+    const action = this.config.keyboard[e.key];
+    if (action === ACTIONS.TOGGLE_AUTOROTATE) {
       this.psv.toggleAutorotate();
     }
-    else if (this.config.keyboard[e.key] && !this.state.keyHandler.time) {
+    else if (action && !this.state.keyHandler.time) {
+      if (action !== ACTIONS.ZOOM_IN && action !== ACTIONS.ZOOM_OUT) {
+        this.psv.__stopAll();
+      }
+
       /* eslint-disable */
-      switch (this.config.keyboard[e.key]) {
+      switch (action) {
         // @formatter:off
         case ACTIONS.ROTATE_LAT_UP: this.psv.dynamics.position.roll({latitude: false}); break;
         case ACTIONS.ROTATE_LAT_DOWN: this.psv.dynamics.position.roll({latitude: true});  break;
@@ -246,6 +253,7 @@ export class EventsHandler extends AbstractService {
     this.state.keyHandler.up(() => {
       this.psv.dynamics.position.stop();
       this.psv.dynamics.zoom.stop();
+      this.psv.resetIdleTime();
     });
   }
 
@@ -681,8 +689,7 @@ export class EventsHandler extends AbstractService {
         const textureCoords = this.psv.dataHelper.sphericalCoordsToTextureCoords(data);
         data.textureX = textureCoords.x;
         data.textureY = textureCoords.y;
-      }
-      catch (e) {
+      } catch (e) {
         data.textureX = NaN;
         data.textureY = NaN;
       }

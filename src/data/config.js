@@ -32,6 +32,7 @@ export const DEFAULTS = {
   moveSpeed          : 1,
   zoomSpeed          : 1,
   autorotateDelay    : null,
+  autorotateIdle     : null,
   autorotateSpeed    : '2rpm',
   autorotateLat      : null,
   moveInertia        : true,
